@@ -14,7 +14,6 @@ The current implementation is focused on a polished onboarding UI, predictable c
   - success confirmation modal
 - Enforces input quality with per-step validation.
 - Uses a 4-digit OTP input flow with digit-only behavior and auto-focus progression.
-- Includes a lightweight Express API (`/api/ping`, `/api/demo`) for server integration.
 
 ## Tech Stack
 
