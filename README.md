@@ -79,18 +79,12 @@ Input focus is intentionally managed to reduce friction:
 - Password step uses refs and effect-based focus for reliability
 - OTP auto-focuses to the next input and supports paste behavior
 
-### 4) OTP Constraint
-
-OTP was intentionally reduced to 4 digits to match the product requirement.  
-The state model, input handling, and validation logic all enforce this consistently.
-
 ## Modal/Success UX Decisions
 
 - Success popup includes:
   - completion heading
   - concise account summary
   - security reassurance section with green shield-check icon
-- Password is intentionally not displayed in the summary modal.
 
 ## Run Locally
 
