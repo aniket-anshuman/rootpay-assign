@@ -27,9 +27,7 @@ The current implementation is focused on a polished onboarding UI, predictable c
 The app is organized as two layers in a single repo:
 
 - `client/`: SPA frontend
-- `server/`: Express API server
-- `shared/`: types shared between client and server
-
+  
 ### Frontend Structure
 
 - `client/pages/Index.tsx`
