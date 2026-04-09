@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ProgressBar from "./ProgressBar";
 import NavigationButtons from "./NavigationButtons";
 
@@ -15,7 +15,16 @@ export default function OtpStep({
   onBack,
   onContinue,
 }: OtpStepProps) {
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const otpLength = otp.length;
+  const otpError = otp.some((digit) => !/^\d$/.test(digit)) ? "OTP must be exactly 4 digits" : "";
+  const handleContinue = () => {
+    setSubmitAttempted(true);
+    if (!otpError) {
+      onContinue();
+    }
+  };
 
   const handleChange = (index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1);
@@ -25,7 +34,7 @@ export default function OtpStep({
     newOtp[index] = value;
     onOtpChange(newOtp);
 
-    if (value && index < 5) {
+    if (value && index < otpLength - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -38,19 +47,24 @@ export default function OtpStep({
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pasteData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pasteData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, otpLength);
     const newOtp = [...otp];
     pasteData.split("").forEach((char, i) => {
       newOtp[i] = char;
     });
     onOtpChange(newOtp);
-    const lastFilledIndex = Math.min(pasteData.length, 5);
+    const lastFilledIndex = Math.min(pasteData.length, otpLength - 1);
     inputRefs.current[lastFilledIndex]?.focus();
   };
 
+  useEffect(() => {
+    const firstEmptyIndex = otp.findIndex((digit) => digit === "");
+    const targetIndex = firstEmptyIndex === -1 ? otpLength - 1 : firstEmptyIndex;
+    inputRefs.current[targetIndex]?.focus();
+  }, [otp, otpLength]);
+
   return (
     <div>
-      {/* Progress Bar */}
       <div className="px-8 lg:px-16 pt-6">
         <ProgressBar progress={50} />
       </div>
@@ -67,7 +81,6 @@ export default function OtpStep({
           An OTP has been sent to your mobile number
         </p>
 
-        {/* OTP Boxes */}
         <div className="flex gap-3 sm:gap-4 mb-4">
           {otp.map((digit, index) => (
             <input
@@ -89,8 +102,12 @@ export default function OtpStep({
             />
           ))}
         </div>
+        {submitAttempted && otpError && (
+          <p className="text-sm mb-4" style={{ color: "#FF7C52" }}>
+            {otpError}
+          </p>
+        )}
 
-        {/* Resend */}
         <div className="flex justify-end mb-16">
           <p className="text-sm" style={{ color: "#132C4A" }}>
             Did not receive OTP?{" "}
@@ -103,7 +120,10 @@ export default function OtpStep({
           </p>
         </div>
 
-        <NavigationButtons onBack={onBack} onContinue={onContinue} />
+        <NavigationButtons
+          onBack={onBack}
+          onContinue={handleContinue}
+        />
       </div>
     </div>
   );

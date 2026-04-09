@@ -1,3 +1,4 @@
+import { useState } from "react";
 import ProgressBar from "./ProgressBar";
 import NavigationButtons from "./NavigationButtons";
 
@@ -22,15 +23,26 @@ interface InputFieldProps {
   placeholder?: string;
   type?: string;
   required?: boolean;
+  error?: string;
+  autoFocus?: boolean;
 }
 
-function InputField({ label, value, onChange, placeholder, type = "text", required }: InputFieldProps) {
+function InputField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required,
+  error,
+  autoFocus = false,
+}: InputFieldProps) {
   return (
     <div className="relative w-full">
       <div
         className="relative w-full rounded-xl h-[76px]"
         style={{
-          border: value ? "1px solid #729CF0" : "1px solid #D9E0E6",
+          border: error ? "1px solid #FF7C52" : value ? "1px solid #729CF0" : "1px solid #D9E0E6",
           background: "#FFF",
           boxShadow: "0 4px 8px 0 rgba(188, 203, 219, 0.30)",
         }}
@@ -44,6 +56,7 @@ function InputField({ label, value, onChange, placeholder, type = "text", requir
         </label>
         <input
           type={type}
+          autoFocus={autoFocus}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
@@ -54,14 +67,59 @@ function InputField({ label, value, onChange, placeholder, type = "text", requir
           }}
         />
       </div>
+      {error && (
+        <p className="mt-2 text-sm" style={{ color: "#FF7C52" }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
 
 export default function NameStep({ data, onChange, onBack, onContinue }: NameStepProps) {
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const firstName = data.firstName.trim();
+  const lastName = data.lastName.trim();
+  const email = data.email.trim();
+  const phoneDigits = data.phone.replace(/\D/g, "");
+
+  const errors = {
+    firstName:
+      firstName.length === 0
+        ? "First name is required"
+        : !/^[a-zA-Z\s'-]+$/.test(firstName)
+          ? "First name contains invalid characters"
+          : "",
+    lastName:
+      lastName.length === 0
+        ? "Last name is required"
+        : !/^[a-zA-Z\s'-]+$/.test(lastName)
+          ? "Last name contains invalid characters"
+          : "",
+    email:
+      email.length === 0
+        ? "Email is required"
+        : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+          ? "Enter a valid email address"
+          : "",
+    phone:
+      phoneDigits.length === 0
+        ? "Phone number is required"
+        : phoneDigits.length !== 10
+          ? "Phone number must be exactly 10 digits"
+          : "",
+  };
+
+  const hasError = Object.values(errors).some(Boolean);
+  const handleContinue = () => {
+    setSubmitAttempted(true);
+    if (!hasError) {
+      onContinue();
+    }
+  };
+
   return (
     <div>
-      {/* Progress Bar */}
       <div className="px-8 lg:px-16 pt-6">
         <ProgressBar progress={75} />
       </div>
@@ -78,14 +136,17 @@ export default function NameStep({ data, onChange, onBack, onContinue }: NameSte
           <InputField
             label="First Name"
             value={data.firstName}
-            onChange={(v) => onChange("firstName", v)}
+            onChange={(v) => onChange("firstName", v.replace(/[^a-zA-Z\s'-]/g, ""))}
             required
+            error={submitAttempted ? errors.firstName : ""}
+            autoFocus
           />
           <InputField
             label="Last Name"
             value={data.lastName}
-            onChange={(v) => onChange("lastName", v)}
+            onChange={(v) => onChange("lastName", v.replace(/[^a-zA-Z\s'-]/g, ""))}
             required
+            error={submitAttempted ? errors.lastName : ""}
           />
           <InputField
             label="Email"
@@ -93,17 +154,22 @@ export default function NameStep({ data, onChange, onBack, onContinue }: NameSte
             value={data.email}
             onChange={(v) => onChange("email", v)}
             required
+            error={submitAttempted ? errors.email : ""}
           />
           <InputField
             label="Phone"
             type="tel"
             value={data.phone}
-            onChange={(v) => onChange("phone", v)}
+            onChange={(v) => onChange("phone", v.replace(/\D/g, "").slice(0, 10))}
             required
+            error={submitAttempted ? errors.phone : ""}
           />
         </div>
 
-        <NavigationButtons onBack={onBack} onContinue={onContinue} />
+        <NavigationButtons
+          onBack={onBack}
+          onContinue={handleContinue}
+        />
       </div>
     </div>
   );

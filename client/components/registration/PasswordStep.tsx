@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import ProgressBar from "./ProgressBar";
 import NavigationButtons from "./NavigationButtons";
 
@@ -37,9 +37,20 @@ interface PasswordFieldProps {
   onChange: (val: string) => void;
   show: boolean;
   onToggleShow: () => void;
+  error?: string;
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
-function PasswordField({ label, hint, value, onChange, show, onToggleShow }: PasswordFieldProps) {
+function PasswordField({
+  label,
+  hint,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+  error,
+  inputRef,
+}: PasswordFieldProps) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-base" style={{ color: "#8292A1", fontFamily: "Rubik, sans-serif" }}>
@@ -48,11 +59,12 @@ function PasswordField({ label, hint, value, onChange, show, onToggleShow }: Pas
       <div
         className="relative w-full rounded-xl h-[76px] flex items-center px-4"
         style={{
-          border: "1px solid #729CF0",
+          border: error ? "1px solid #FF7C52" : "1px solid #729CF0",
           background: "#FFF",
         }}
       >
         <input
+          ref={inputRef}
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -72,7 +84,7 @@ function PasswordField({ label, hint, value, onChange, show, onToggleShow }: Pas
         </button>
       </div>
       <p className="text-sm" style={{ color: "#8292A1" }}>
-        {hint}
+        {error || hint}
       </p>
     </div>
   );
@@ -88,10 +100,41 @@ export default function PasswordStep({
 }: PasswordStepProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const confirmInputRef = useRef<HTMLInputElement>(null);
+  const passwordError =
+    password.length === 0
+      ? "Password is required"
+      : password.length < 6
+        ? "Password must be at least 6 characters"
+        : "";
+  const confirmPasswordError =
+    confirmPassword.length === 0
+      ? "Confirm password is required"
+      : confirmPassword !== password
+        ? "Both passwords must match"
+        : "";
+  const hasError = Boolean(passwordError || confirmPasswordError);
+  const handleContinue = () => {
+    setSubmitAttempted(true);
+    if (!hasError) {
+      onContinue();
+    }
+  };
+
+  useEffect(() => {
+    if (!password) {
+      passwordInputRef.current?.focus();
+      return;
+    }
+    if (!confirmPassword) {
+      confirmInputRef.current?.focus();
+    }
+  }, [password, confirmPassword]);
 
   return (
     <div>
-      {/* Progress Bar */}
       <div className="px-8 lg:px-16 pt-6">
         <ProgressBar progress={100} />
       </div>
@@ -112,6 +155,8 @@ export default function PasswordStep({
             onChange={onPasswordChange}
             show={showPassword}
             onToggleShow={() => setShowPassword((v) => !v)}
+            error={submitAttempted ? passwordError : ""}
+            inputRef={passwordInputRef}
           />
           <PasswordField
             label="Confirm password"
@@ -120,10 +165,16 @@ export default function PasswordStep({
             onChange={onConfirmChange}
             show={showConfirm}
             onToggleShow={() => setShowConfirm((v) => !v)}
+            error={submitAttempted ? confirmPasswordError : ""}
+            inputRef={confirmInputRef}
           />
         </div>
 
-        <NavigationButtons onBack={onBack} onContinue={onContinue} continueLabel="Submit" />
+        <NavigationButtons
+          onBack={onBack}
+          onContinue={handleContinue}
+          continueLabel="Submit"
+        />
       </div>
     </div>
   );

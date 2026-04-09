@@ -22,7 +22,7 @@ export default function Index() {
   const [step, setStep] = useState<Step>("account-type");
   const [accountType, setAccountType] = useState<"personal" | "business" | null>(null);
   const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [nameData, setNameData] = useState({
     firstName: "",
     lastName: "",
@@ -114,11 +114,10 @@ export default function Index() {
             phone: mobile || nameData.phone || "—",
           }}
           onDashboard={() => {
-            // Reset flow
             setStep("account-type");
             setAccountType(null);
             setMobile("");
-            setOtp(["", "", "", "", "", ""]);
+            setOtp(["", "", "", ""]);
             setNameData({ firstName: "", lastName: "", email: "", phone: "" });
             setPassword("");
             setConfirmPassword("");

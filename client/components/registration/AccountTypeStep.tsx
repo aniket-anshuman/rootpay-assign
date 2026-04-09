@@ -1,3 +1,4 @@
+import { useState } from "react";
 import NavigationButtons from "./NavigationButtons";
 
 interface AccountTypeStepProps {
@@ -40,6 +41,15 @@ export default function AccountTypeStep({
   onBack,
   onContinue,
 }: AccountTypeStepProps) {
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const accountTypeError = !selected ? "Please select an account type" : "";
+  const handleContinue = () => {
+    setSubmitAttempted(true);
+    if (!accountTypeError) {
+      onContinue();
+    }
+  };
+
   return (
     <div className="p-8 lg:p-16">
       <h2
@@ -52,7 +62,6 @@ export default function AccountTypeStep({
       </h2>
 
       <div className="flex flex-col gap-4 mb-16">
-        {/* Personal Option */}
         <button
           onClick={() => onSelect("personal")}
           className="w-full h-[76px] rounded-2xl flex items-center px-8 transition-all text-left relative"
@@ -83,7 +92,6 @@ export default function AccountTypeStep({
           )}
         </button>
 
-        {/* Business Option */}
         <button
           onClick={() => onSelect("business")}
           className="w-full h-[76px] rounded-2xl flex items-center px-8 transition-all text-left relative"
@@ -114,10 +122,15 @@ export default function AccountTypeStep({
           )}
         </button>
       </div>
+      {submitAttempted && accountTypeError && (
+        <p className="mb-4 text-sm" style={{ color: "#FF7C52" }}>
+          {accountTypeError}
+        </p>
+      )}
 
       <NavigationButtons
         onBack={onBack}
-        onContinue={onContinue}
+        onContinue={handleContinue}
         showBack={true}
       />
     </div>
